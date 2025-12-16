@@ -90,10 +90,18 @@ function getUstrd(ntry, payee) {
 function getEntry(ntry) {
   const isDebit = findElement(ntry, 'CdtDbtInd') === 'DBIT';
   const amount = findElement(ntry, 'Amt');
-  const payee = isDebit ? getDebitPayee(ntry) : getCreditPayee(ntry);
+  const debitPayee = getDebitPayee(ntry);
+  const creditPayer = getCreditPayee(ntry);
   const iban = isDebit ? getDebitIban(ntry) : getCreditIban(ntry);
-  const ustrd = getUstrd(ntry, payee);
-  const description = [iban, ustrd].filter(Boolean).join(' ');
+  const ustrd = getUstrd(ntry, isDebit ? debitPayee : creditPayer);
+
+  // For debits: payee is who we paid, description is IBAN + ustrd
+  // For credits: payee is empty, description includes payer name + IBAN + ustrd
+  const payee = isDebit ? debitPayee : '';
+  const description = isDebit
+    ? [iban, ustrd].filter(Boolean).join(' ')
+    : [iban, creditPayer, ustrd].filter(Boolean).join(' ');
+
   return new Ntry(
     getDate(ntry),
     isDebit ? amount : '',

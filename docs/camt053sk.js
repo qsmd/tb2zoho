@@ -70,23 +70,41 @@ function getReferenceNumber(ntry) {
   return '';
 }
 
+function getUstrd(ntry, payee) {
+  const ustrdNode = getElement('NtryDtls/TxDtls/RmtInf/Ustrd', ntry);
+  if (!ustrdNode) { return ''; }
+
+  const ustrd = ustrdNode.textContent;
+
+  // Skip XML-like garbage with parentheses tags like (CdtrRefInf)(Tp)...
+  if (/\([A-Za-z]+\)/.test(ustrd)) { return ''; }
+
+  // Skip if contains both payee name and VS (redundant info)
+  const hasPayee = payee && ustrd.toLowerCase().includes(payee.toLowerCase().split(' ')[0]);
+  const hasVS = /VS|\d{6,}/.test(ustrd);
+  if (hasPayee && hasVS) { return ''; }
+
+  return stripCommasAndSpaces(ustrd);
+}
+
 function getEntry(ntry) {
   const isDebit = findElement(ntry, 'CdtDbtInd') === 'DBIT';
   const amount = findElement(ntry, 'Amt');
   const payee = isDebit ? getDebitPayee(ntry) : getCreditPayee(ntry);
   const iban = isDebit ? getDebitIban(ntry) : getCreditIban(ntry);
+  const ustrd = getUstrd(ntry, payee);
+  const description = [iban, ustrd].filter(Boolean).join(' ');
   return new Ntry(
     getDate(ntry),
     isDebit ? amount : '',
     isDebit ? '' : amount,
     payee,
-    iban,
+    description,
     getReferenceNumber(ntry),
   );
 }
 
 export function xml2csv(xmlText) {
-  console.log('tb2zoho v2 - updated XML parser loaded');
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'text/xml');
   const ntrys = xml.getElementsByTagName('Ntry');

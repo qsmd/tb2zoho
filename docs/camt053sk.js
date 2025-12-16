@@ -13,55 +13,53 @@ function getDebitPayee(ntry) {
   const rltdpties = getElement('NtryDtls/TxDtls/RltdPties', ntry);
   if (!rltdpties) { return 'Bankove poplatky'; }
 
-  const adrLineNode = getElement('NtryDtls/TxDtls/RltdAgts/Prtry/Agt/BrnchId/PstlAdr/AdrLine', ntry);
   let nameNode = getElement('TradgPty/Nm', rltdpties);
   if (!nameNode) { nameNode = getElement('Cdtr/Nm', rltdpties); }
-  const name = nameNode ? stripCommasAndSpaces(nameNode.textContent) : '';
+  return nameNode ? stripCommasAndSpaces(nameNode.textContent) : '';
+}
+
+function getDebitIban(ntry) {
+  const rltdpties = getElement('NtryDtls/TxDtls/RltdPties', ntry);
+  if (!rltdpties) { return ''; }
+
   const ibanNode = getElement('CdtrAcct/Id/IBAN', rltdpties);
-  const iban = ibanNode ? stripCommasAndSpaces(ibanNode.textContent) : '';
-  const divider1 = (nameNode && ibanNode) ? ' ' : '';
-  const adrLine = adrLineNode ? stripCommasAndSpaces(adrLineNode.textContent) : '';
-  const divider2 = adrLineNode ? ' ' : '';
-  return `${name}${divider1}${iban}${divider2}${adrLine}`;
+  return ibanNode ? stripCommasAndSpaces(ibanNode.textContent) : '';
 }
 
-function getDebitMemo(ntry) {
+function getCreditPayee(ntry) {
   const rltdpties = getElement('NtryDtls/TxDtls/RltdPties', ntry);
-  if (!rltdpties) { return 'Bankove poplatky'; }
+  if (!rltdpties) { return ''; }
 
-  let node = getElement('InitgPty/Nm', rltdpties);
-  if (!node) { node = getElement('NtryDtls/TxDtls/RmtInf/Ustrd', ntry); }
-  if (!node) { return ''; }
-
-  let memo = node.textContent;
-  const card = getElement('NtryDtls/TxDtls/Refs/ChqNb', ntry);
-  if (card) { memo = `${memo} *${card.textContent.replace(/\*/g, '')}`; }
-  return stripCommasAndSpaces(memo);
+  let nameNode = getElement('TradgPty/Nm', rltdpties);
+  if (!nameNode) { nameNode = getElement('Dbtr/Nm', rltdpties); }
+  return nameNode ? stripCommasAndSpaces(nameNode.textContent) : '';
 }
 
-function getCreditMemo(ntry) {
+function getCreditIban(ntry) {
   const rltdpties = getElement('NtryDtls/TxDtls/RltdPties', ntry);
-  if (!rltdpties) { return 'Bankove poplatky'; }
+  if (!rltdpties) { return ''; }
 
-  const node = getElement('TradgPty/Nm', rltdpties);
-  if (!node) {
-    const nm = getElement('Dbtr/Nm', rltdpties);
-    const nodeIban = getElement('DbtrAcct/Id/IBAN', rltdpties);
-    const memo = `${nm ? nm.textContent : ''} ${nodeIban ? nodeIban.textContent : ''}`;
-    return stripCommasAndSpaces(memo);
-  }
+  const ibanNode = getElement('DbtrAcct/Id/IBAN', rltdpties);
+  return ibanNode ? stripCommasAndSpaces(ibanNode.textContent) : '';
+}
 
-  return stripCommasAndSpaces(node.textContent);
+function getReferenceNumber(ntry) {
+  const refNode = getElement('NtryDtls/TxDtls/Refs/EndToEndId', ntry);
+  return refNode ? stripCommasAndSpaces(refNode.textContent) : '';
 }
 
 function getEntry(ntry) {
   const isDebit = findElement(ntry, 'CdtDbtInd') === 'DBIT';
   const amount = findElement(ntry, 'Amt');
+  const payee = isDebit ? getDebitPayee(ntry) : getCreditPayee(ntry);
+  const iban = isDebit ? getDebitIban(ntry) : getCreditIban(ntry);
   return new Ntry(
     getDate(ntry),
-    isDebit ? getDebitPayee(ntry) : '', // if credit, I am payee
-    isDebit ? getDebitMemo(ntry) : getCreditMemo(ntry),
-    isDebit ? `-${amount}` : amount,
+    isDebit ? amount : '',
+    isDebit ? '' : amount,
+    payee,
+    iban,
+    getReferenceNumber(ntry),
   );
 }
 
@@ -69,14 +67,10 @@ export function xml2csv(xmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'text/xml');
   const ntrys = xml.getElementsByTagName('Ntry');
-  let csv = 'Date,Payee,Memo,Amount\n';
+  let csv = 'Date,Withdrawal,Deposits,Payee,Description,Reference Number\n';
   for (let i = 0; i < ntrys.length; i += 1) {
     const ntry = getEntry(ntrys[i]);
-
-    // DEBUG
-    // console.log([ntry.date, ntry.payee, ntry.memo, ntry.amount].join(','));
-
-    csv += [ntry.date, ntry.payee, ntry.memo, ntry.amount].join(',');
+    csv += [ntry.date, ntry.withdrawal, ntry.deposit, ntry.payee, ntry.description, ntry.referenceNumber].join(',');
     csv += '\n';
   }
   return csv;

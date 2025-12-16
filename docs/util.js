@@ -3,11 +3,13 @@ const version = '0.1';
 export default version;
 
 export class Ntry {
-  constructor(date, payee, memo, amount) {
+  constructor(date, withdrawal, deposit, payee, description, referenceNumber) {
     this.date = date;
+    this.withdrawal = withdrawal;
+    this.deposit = deposit;
     this.payee = payee;
-    this.memo = memo;
-    this.amount = amount;
+    this.description = description;
+    this.referenceNumber = referenceNumber;
   }
 }
 

@@ -17,32 +17,36 @@ export function csv2csv(inputCSV) {
       if (parts.length > 0) {
         const infoColumnParts = parts[13].split(' ');
         let payee = null;
-        let memo = getCard(infoColumnParts);
-        if (memo !== null) {
+        let description = '';
+        const card = getCard(infoColumnParts);
+        if (card !== null) {
           payee = getPayee(infoColumnParts);
+          description = card;
         } else {
           payee = parts[8];
-          memo = [parts[13], parts[12]].join(' ');
-          if (isNullOrWhitespace(memo)) {
-            memo = parts[14];
+          description = [parts[13], parts[12]].join(' ');
+          if (isNullOrWhitespace(description)) {
+            description = parts[14];
           }
         }
+        const amount = parts[2].replace(/,/g, '.');
+        const isDebit = parts[4] === "Debet";
+        const referenceNumber = parts[0] || '';
+
         row.push(parts[1]);
+        row.push(isDebit ? amount : '');
+        row.push(isDebit ? '' : amount);
         row.push(stripCommasAndSpaces(payee));
-        row.push(stripCommasAndSpaces(memo));
-        row.push(getSign(parts[4]) + parts[2].replace(/,/g, '.'));
+        row.push(stripCommasAndSpaces(description));
+        row.push(stripCommasAndSpaces(referenceNumber));
       }
-      
+
       return row;
   });
 
   // Convert the processed lines back to a CSV string
   const processedCSV = processedLines.map(row => row.join(',')).join('\n');
-  return 'Date,Payee,Memo,Amount\n' + processedCSV;
-}
-
-function getSign(operationType) {
-  return operationType === "Debet" ? '-' : '';
+  return 'Date,Withdrawal,Deposits,Payee,Description,Reference Number\n' + processedCSV;
 }
 
 function getCard(parts) {

@@ -45,7 +45,14 @@ function getCreditIban(ntry) {
 
 function getReferenceNumber(ntry) {
   const refNode = getElement('NtryDtls/TxDtls/Refs/EndToEndId', ntry);
-  return refNode ? stripCommasAndSpaces(refNode.textContent) : '';
+  if (!refNode) { return ''; }
+
+  const ref = refNode.textContent;
+  const vsMatch = ref.match(/\/VS(\d+)/);
+  if (vsMatch) {
+    return vsMatch[1];
+  }
+  return stripCommasAndSpaces(ref);
 }
 
 function getEntry(ntry) {

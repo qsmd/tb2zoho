@@ -1,4 +1,4 @@
 # tb2ynab
-YNAB converter for Tatra banka
+ZOHO converter for Tatra banka
 
-Try it at [qsmd.github.io/tb2ynab](https://qsmd.github.io/tb2ynab/).
+Try it at [qsmd.github.io/tb2zoho](https://qsmd.github.io/tb2zoho/).

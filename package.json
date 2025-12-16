@@ -1,8 +1,8 @@
 {
-  "name": "tb2ynab",
+  "name": "tb2zoho",
   "version": "1.0.0",
-  "description": "YNAB converter for Tatra banka",
-  "main": "tb2ynab.js",
+  "description": "ZOHO converter for Tatra banka",
+  "main": "tb2zoho.js",
   "devDependencies": {
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
@@ -17,12 +17,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/qsmd/tb2ynab.git"
+    "url": "git+https://github.com/qsmd/tb2zoho.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/qsmd/tb2ynab/issues"
+    "url": "https://github.com/qsmd/tb2zoho/issues"
   },
-  "homepage": "https://qsmd.github.io/tb2ynab"
+  "homepage": "https://qsmd.github.io/tb2zoho"
 }

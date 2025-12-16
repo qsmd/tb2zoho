@@ -15,10 +15,10 @@ function parse(text, file) {
   let fileName;
   let csv;
   if (file.type == "text/xml") {
-    fileName = file.name.replace('.xml', '.ynab.csv');
+    fileName = file.name.replace('.xml', '.zoho.csv');
     csv = xml2csv(text)
   } else if (file.type == "text/csv") {
-    fileName = file.name.replace('.csv', '.ynab.csv');
+    fileName = file.name.replace('.csv', '.zoho.csv');
     csv = csv2csv(text);
   } else {
     error('Incorrect file type');

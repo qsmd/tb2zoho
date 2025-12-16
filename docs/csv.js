@@ -45,8 +45,8 @@ export function csv2csv(inputCSV) {
   });
 
   // Convert the processed lines back to a CSV string
-  const processedCSV = processedLines.map(row => row.join(',')).join('\n');
-  return 'Date,Withdrawal,Deposits,Payee,Description,Reference Number\n' + processedCSV;
+  const processedCSV = processedLines.map(row => row.join(';')).join('\n');
+  return 'Date;Withdrawals;Deposits;Payee;Description;Reference Number\n' + processedCSV;
 }
 
 function getCard(parts) {

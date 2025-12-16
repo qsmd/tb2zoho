@@ -108,10 +108,10 @@ export function xml2csv(xmlText) {
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'text/xml');
   const ntrys = xml.getElementsByTagName('Ntry');
-  let csv = 'Date,Withdrawal,Deposits,Payee,Description,Reference Number\n';
+  let csv = 'Date;Withdrawals;Deposits;Payee;Description;Reference Number\n';
   for (let i = 0; i < ntrys.length; i += 1) {
     const ntry = getEntry(ntrys[i]);
-    csv += [ntry.date, ntry.withdrawal, ntry.deposit, ntry.payee, ntry.description, ntry.referenceNumber].join(',');
+    csv += [ntry.date, ntry.withdrawal, ntry.deposit, ntry.payee, ntry.description, ntry.referenceNumber].join(';');
     csv += '\n';
   }
   return csv;

@@ -39,20 +39,35 @@ function getCreditIban(ntry) {
   const rltdpties = getElement('NtryDtls/TxDtls/RltdPties', ntry);
   if (!rltdpties) { return ''; }
 
-  const ibanNode = getElement('DbtrAcct/Id/IBAN', rltdpties);
+  // Try IBAN first, then fallback to Othr/Id (used for international payments)
+  let ibanNode = getElement('DbtrAcct/Id/IBAN', rltdpties);
+  if (!ibanNode) { ibanNode = getElement('DbtrAcct/Id/Othr/Id', rltdpties); }
   return ibanNode ? stripCommasAndSpaces(ibanNode.textContent) : '';
 }
 
 function getReferenceNumber(ntry) {
   const refNode = getElement('NtryDtls/TxDtls/Refs/EndToEndId', ntry);
-  if (!refNode) { return ''; }
-
-  const ref = refNode.textContent;
-  const vsMatch = ref.match(/\/VS(\d+)/);
-  if (vsMatch) {
-    return vsMatch[1];
+  if (refNode) {
+    const ref = refNode.textContent;
+    const vsMatch = ref.match(/\/VS(\d+)/);
+    if (vsMatch) {
+      return vsMatch[1];
+    }
+    return stripCommasAndSpaces(ref);
   }
-  return stripCommasAndSpaces(ref);
+
+  // Fallback: check RmtInf/Ustrd for invoice number (international payments)
+  const ustrdNode = getElement('NtryDtls/TxDtls/RmtInf/Ustrd', ntry);
+  if (ustrdNode) {
+    const ustrd = ustrdNode.textContent;
+    // Look for patterns like "INVOICE NO. 2024230" or just extract numbers
+    const invoiceMatch = ustrd.match(/(?:INVOICE\s*(?:NO\.?)?\s*)?(\d{5,})/i);
+    if (invoiceMatch) {
+      return invoiceMatch[1];
+    }
+  }
+
+  return '';
 }
 
 function getEntry(ntry) {
@@ -71,6 +86,7 @@ function getEntry(ntry) {
 }
 
 export function xml2csv(xmlText) {
+  console.log('tb2zoho v2 - updated XML parser loaded');
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'text/xml');
   const ntrys = xml.getElementsByTagName('Ntry');

@@ -9,9 +9,16 @@ import {
 const version = '0.1';
 export default version;
 
+function getNarrative(ntry) {
+  const addtlInf = ntry.getElementsByTagName('AddtlNtryInf')[0];
+  if (!addtlInf) { return ''; }
+  const match = addtlInf.textContent.match(/<Nrtv>([^<]+)<\/Nrtv>/);
+  return match ? stripCommasAndSpaces(match[1]) : '';
+}
+
 function getDebitPayee(ntry) {
   const rltdpties = getElement('NtryDtls/TxDtls/RltdPties', ntry);
-  if (!rltdpties) { return 'Bankove poplatky'; }
+  if (!rltdpties) { return ''; }
 
   let nameNode = getElement('TradgPty/Nm', rltdpties);
   if (!nameNode) { nameNode = getElement('Cdtr/Nm', rltdpties); }
@@ -94,13 +101,17 @@ function getEntry(ntry) {
   const creditPayer = getCreditPayee(ntry);
   const iban = isDebit ? getDebitIban(ntry) : getCreditIban(ntry);
   const ustrd = getUstrd(ntry, isDebit ? debitPayee : creditPayer);
+  const narrative = getNarrative(ntry);
 
-  // For debits: payee is who we paid, description is IBAN + ustrd
+  // For debits: payee is who we paid, description is IBAN + ustrd (or narrative for bank fees)
   // For credits: payee is empty, description includes payer name + IBAN + ustrd
   const payee = isDebit ? debitPayee : '';
-  const description = isDebit
-    ? [iban, ustrd].filter(Boolean).join(' ')
-    : [iban, creditPayer, ustrd].filter(Boolean).join(' ');
+  let description;
+  if (isDebit) {
+    description = debitPayee ? [iban, ustrd].filter(Boolean).join(' ') : narrative;
+  } else {
+    description = [iban, creditPayer, ustrd].filter(Boolean).join(' ');
+  }
 
   return new Ntry(
     getDate(ntry),
